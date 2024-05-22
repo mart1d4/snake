@@ -7,7 +7,6 @@
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
-<?import javafx.scene.layout.Pane?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
@@ -32,7 +31,7 @@
             </HBox>
          </top>
          <center>
-            <BorderPane fx:id="canvasContainer" maxHeight="640.0" maxWidth="600.0" prefHeight="640.0" prefWidth="600.0" style="-fx-border-color: #578a34; -fx-border-width: 20;" BorderPane.alignment="CENTER">
+            <BorderPane maxHeight="640.0" maxWidth="600.0" prefHeight="640.0" prefWidth="600.0" style="-fx-border-color: #578a34; -fx-border-width: 20;" BorderPane.alignment="CENTER">
                <center>
                   <Canvas fx:id="canvas" height="600.0" width="600.0" BorderPane.alignment="CENTER" />
                </center>
@@ -49,20 +48,51 @@
                </children>
             </HBox>
          </bottom>
-         <left>
-            <Pane prefHeight="675.0" prefWidth="280.0" BorderPane.alignment="CENTER" />
-         </left>
          <right>
             <BorderPane prefHeight="675.0" prefWidth="280.0" BorderPane.alignment="CENTER">
                <center>
-                  <Button fx:id="playAgainButton" mnemonicParsing="false" style="-fx-background-color: #57F287; -fx-text-fill: #101010; -fx-background-radius: 3; -fx-font-weight: bold; -fx-cursor: hand; -fx-padding: 8 16;" text="Play Again" textFill="#1b1b1b" BorderPane.alignment="CENTER">
-                     <font>
-                        <Font size="14.0" />
-                     </font>
-                  </Button>
+                  <VBox alignment="CENTER" prefHeight="200.0" prefWidth="100.0" spacing="20.0" BorderPane.alignment="CENTER">
+                     <children>
+                        <Button fx:id="playAgainButton" mnemonicParsing="false" style="-fx-background-color: #57F287; -fx-text-fill: #101010; -fx-background-radius: 3; -fx-font-weight: bold; -fx-cursor: hand; -fx-padding: 8 16;" text="Play Again" textFill="#1b1b1b">
+                           <font>
+                              <Font size="14.0" />
+                           </font>
+                        </Button>
+                        <Button fx:id="stopButton" mnemonicParsing="false" style="-fx-background-color: #ED4245; -fx-text-fill: #101010; -fx-background-radius: 3; -fx-font-weight: bold; -fx-cursor: hand; -fx-padding: 8 16;" text="Stop Playing" textFill="#1b1b1b">
+                           <font>
+                              <Font size="14.0" />
+                           </font>
+                        </Button>
+                     </children>
+                  </VBox>
                </center>
             </BorderPane>
          </right>
+         <left>
+            <BorderPane prefHeight="675.0" prefWidth="280.0" BorderPane.alignment="CENTER">
+               <center>
+                  <VBox alignment="CENTER" prefHeight="200.0" prefWidth="100.0" BorderPane.alignment="CENTER">
+                     <children>
+                        <Label fx:id="gameAmount" alignment="CENTER" contentDisplay="CENTER" prefHeight="53.0" prefWidth="320.0" style="-fx-font-weight: bold; -fx-font-size: 20; -fx-text-fill: white;" text="Game " textFill="WHITE">
+                           <font>
+                              <Font size="20.0" />
+                           </font>
+                        </Label>
+                        <Label fx:id="playerWin1" alignment="CENTER" prefHeight="53.0" prefWidth="320.0" style="-fx-font-weight: bold; -fx-font-size: 20; -fx-text-fill: white;" text="Player 1 wins: " textFill="WHITE">
+                           <font>
+                              <Font size="20.0" />
+                           </font>
+                        </Label>
+                        <Label fx:id="playerWin2" alignment="CENTER" prefHeight="53.0" prefWidth="320.0" style="-fx-font-weight: bold; -fx-font-size: 20; -fx-text-fill: white;" text="Player 2 wins: " textFill="WHITE">
+                           <font>
+                              <Font size="20.0" />
+                           </font>
+                        </Label>
+                     </children>
+                  </VBox>
+               </center>
+            </BorderPane>
+         </left>
       </BorderPane>
       <BorderPane fx:id="startContainer" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="800.0" prefWidth="1200.0" style="-fx-background-color: #1b1b1b;">
          <top>

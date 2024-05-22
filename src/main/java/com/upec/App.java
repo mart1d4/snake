@@ -59,6 +59,10 @@ public class App extends Application {
         isPlaying = false;
     }
 
+    public static void closeApp() {
+        System.exit(0);
+    }
+
     private HashMap<String, Image> getAssets() {
         List<String> assetNames = List.of(
                 "apple",
@@ -103,6 +107,8 @@ public class App extends Application {
     }
 
     private void handleKeyPress(KeyEvent event) {
+        event.consume();
+
         if (!isPlaying) {
             return;
         }
@@ -119,6 +125,21 @@ public class App extends Application {
                 break;
             case RIGHT:
                 game.moveCurrentPlayer("right");
+                break;
+            case W:
+                game.moveCurrentPlayer("up");
+                break;
+            case S:
+                game.moveCurrentPlayer("down");
+                break;
+            case A:
+                game.moveCurrentPlayer("left");
+                break;
+            case D:
+                game.moveCurrentPlayer("right");
+                break;
+            case ESCAPE:
+                closeApp();
                 break;
             default:
                 break;

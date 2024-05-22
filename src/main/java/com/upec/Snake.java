@@ -1,7 +1,9 @@
 package com.upec;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
 
 public class Snake {
     private List<Point> body;
@@ -166,38 +168,6 @@ public class Snake {
                 || checkCollisionWithWall(width, height);
     }
 
-    // public String playRandomMoveAI(Board board, Snake otherSnake) {
-    // List<String> possibleMoves = new ArrayList<>();
-    // String[] directions = new String[] { "up", "down", "left", "right" };
-
-    // for (String direction : directions) {
-    // Snake clone = cloneSnake();
-    // Point dir = Player.getPointFromDirection(direction);
-    // clone.move(dir.x, dir.y, false);
-
-    // if (!clone.isSnakeDead(board, otherSnake)) {
-    // possibleMoves.add(direction);
-    // }
-    // }
-
-    // if (possibleMoves.size() == 0) {
-    // return getDirection();
-    // }
-
-    // int randomIndex = (int) (Math.random() * possibleMoves.size());
-    // return possibleMoves.get(randomIndex);
-    // }
-
-    public Snake cloneSnake() {
-        Snake clone = new Snake(color);
-
-        for (Point segment : body) {
-            clone.addSegment(segment);
-        }
-
-        return clone;
-    }
-
     public Point getHead() {
         return body.get(0);
     }
@@ -207,28 +177,29 @@ public class Snake {
         Point food = findNearestFood(board);
         Point opponentHead = otherSnake.getHead();
 
-        // If food is available, move towards it
-        // if (food != null) {
-        // String moveToFood = moveToTarget(board, food);
-        // if (moveToFood != null) {
-        // return moveToFood;
-        // }
-        // }
+        // Move towards the nearest food if available
+        if (food != null) {
+            String moveToFood = moveToTarget(board, food, otherSnake);
+            if (moveToFood != null) {
+                return moveToFood;
+            }
+        }
 
-        // Otherwise, try to chase the opponent
-        String moveToOpponent = moveToTarget(board, opponentHead);
+        // Chase the opponent if no food is found
+        String moveToOpponent = moveToTarget(board, opponentHead, otherSnake);
         if (moveToOpponent != null) {
             return moveToOpponent;
         }
 
-        // If no strategic move found, fallback to random move
+        // Fallback to a safe random move
         List<String> possibleMoves = new ArrayList<>();
         for (String direction : directions) {
             Snake clone = cloneSnake();
             Point dir = Player.getPointFromDirection(direction);
             clone.move(dir.x, dir.y, false);
 
-            if (!clone.isSnakeDead(board, otherSnake) && !willBlockItself(board, clone, dir)) {
+            if (!clone.isSnakeDead(board, otherSnake) && isPathSafe(board, clone,
+                    otherSnake, dir)) {
                 possibleMoves.add(direction);
             }
         }
@@ -241,39 +212,26 @@ public class Snake {
         return possibleMoves.get(randomIndex);
     }
 
-    private Point findNearestFood(Board board) {
-        List<Point> foods = board.getFoods();
-        Point head = this.getHead();
-        Point nearestFood = null;
-        int minDistance = Integer.MAX_VALUE;
-
-        for (Point food : foods) {
-            int distance = Math.abs(food.getX() - head.getX()) + Math.abs(food.getY() - head.getY());
-            if (distance < minDistance) {
-                minDistance = distance;
-                nearestFood = food;
-            }
-        }
-        return nearestFood;
-    }
-
-    private String moveToTarget(Board board, Point target) {
+    // Move towards a target point
+    private String moveToTarget(Board board, Point target, Snake otherSnake) {
         String[] directions = new String[] { "up", "down", "left", "right" };
         Point head = this.getHead();
-        Point bestMove = null;
         int minDistance = Integer.MAX_VALUE;
         String bestDirection = null;
 
         for (String direction : directions) {
             Point dir = Player.getPointFromDirection(direction);
-            Point newPos = new Point(head.getX() + dir.getX(), head.getY() + dir.getY());
+            Point newPos = new Point(head.x + dir.x, head.y + dir.y);
 
-            if (!board.isCellBlocked(newPos.getX(), newPos.getY())) {
-                int distance = Math.abs(target.getX() - newPos.getX()) + Math.abs(target.getY() - newPos.getY());
+            if (!board.isCellBlocked(newPos.x, newPos.y)) {
+                int distance = Math.abs(target.x - newPos.x) + Math.abs(target.y - newPos.y);
                 if (distance < minDistance) {
-                    minDistance = distance;
-                    bestMove = newPos;
-                    bestDirection = direction;
+                    Snake clone = cloneSnake();
+                    clone.move(dir.x, dir.y, false);
+                    if (isPathSafe(board, clone, otherSnake, dir)) {
+                        minDistance = distance;
+                        bestDirection = direction;
+                    }
                 }
             }
         }
@@ -281,20 +239,78 @@ public class Snake {
         return bestDirection;
     }
 
-    private boolean willBlockItself(Board board, Snake clone, Point direction) {
-        Point newPos = new Point(clone.getHead().getX() + direction.getX(), clone.getHead().getY() + direction.getY());
-        int freeSpace = 0;
-
-        String[] directions = new String[] { "up", "down", "left", "right" };
-        for (String dir : directions) {
-            Point dirPoint = Player.getPointFromDirection(dir);
-            Point adjacent = new Point(newPos.getX() + dirPoint.getX(), newPos.getY() + dirPoint.getY());
-            if (!board.isCellBlocked(adjacent.getX(), adjacent.getY())) {
-                freeSpace++;
+    // Check if moving in a direction is safe by evaluating multiple steps ahead
+    private boolean isPathSafe(Board board, Snake clone, Snake otherSnake, Point direction) {
+        int maxSteps = 5; // Initial number of lookahead steps
+        while (maxSteps > 0) {
+            if (isPathClear(board, clone, otherSnake, direction, maxSteps)) {
+                return true; // Safe path found
             }
+            maxSteps--; // Reduce the number of lookahead steps
         }
-
-        return freeSpace < 2;
+        return false; // No safe path found within the specified number of steps
     }
 
+    // Use BFS to check if a path is clear for a given number of steps
+    private boolean isPathClear(Board board, Snake clone, Snake otherSnake, Point direction, int steps) {
+        Queue<Snake> queue = new LinkedList<>();
+        queue.add(clone);
+
+        while (!queue.isEmpty() && steps > 0) {
+            int size = queue.size();
+            for (int i = 0; i < size; i++) {
+                Snake current = queue.poll();
+                Point head = current.getHead();
+
+                for (String d : new String[] { "up", "down", "left", "right" }) {
+                    Point dir = Player.getPointFromDirection(d);
+                    Snake nextMove = current.cloneSnake();
+                    nextMove.move(dir.x, dir.y, false);
+
+                    if (nextMove.isSnakeDead(board, otherSnake)
+                            || board.isCellBlocked(head.x + dir.x, head.y + dir.y)) {
+                        continue;
+                    }
+
+                    queue.add(nextMove);
+                }
+            }
+            steps--;
+        }
+
+        if (queue.isEmpty()) {
+            // If the path is not clear, recursively reduce the number of steps
+            if (steps > 0) {
+                return isPathClear(board, clone, otherSnake, direction, steps - 1);
+            } else {
+                return false; // No safe path found within the specified number of steps
+            }
+        } else {
+            return true; // Safe path found
+        }
+    }
+
+    public Snake cloneSnake() {
+        Snake clone = new Snake(color);
+        for (Point segment : body) {
+            clone.addSegment(segment);
+        }
+        return clone;
+    }
+
+    private Point findNearestFood(Board board) {
+        List<Point> foods = board.getFoods();
+        Point head = this.getHead();
+        Point nearestFood = null;
+        int minDistance = Integer.MAX_VALUE;
+
+        for (Point food : foods) {
+            int distance = Math.abs(food.x - head.x) + Math.abs(food.y - head.y);
+            if (distance < minDistance) {
+                minDistance = distance;
+                nearestFood = food;
+            }
+        }
+        return nearestFood;
+    }
 }

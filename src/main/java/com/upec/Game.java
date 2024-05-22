@@ -6,21 +6,17 @@ import java.util.HashMap;
 import java.util.List;
 
 public class Game {
-    private static final int NUM_INITIAL_OBSTACLES = 5;
-    private static final int NUM_INITIAL_FOODS = 3;
+    private static final int NUM_INITIAL_OBSTACLES = 20;
+    private static final int NUM_INITIAL_FOODS = 5;
     private static final int NUM_GROWTH_THRESHOLD = 3;
 
     private Board board;
-    private int width;
-    private int height;
-    private int cellSize;
-    private int round;
-    private boolean gameOver;
-    private int winner;
     private Player player1;
     private Player player2;
     private Player currentPlayer;
+    private int round;
     private int moves;
+
     private Controller controller;
     private HashMap<String, Image> assets;
 
@@ -57,12 +53,13 @@ public class Game {
         }
 
         if (snake.isSnakeDead(board, otherSnake)) {
-            gameOver = true;
-            winner = currentPlayer == player1 ? 2 : 1;
+            Player winnerPlayer = getOtherPlayer();
+            winnerPlayer.addWin();
 
             App.stopGame();
-            controller.drawBoard(this, width, height, cellSize, assets);
-            controller.stopGame(winner == 1 ? player1 : player2);
+            controller.drawBoard(this, board.getWidth(), board.getHeight(), board.getCellSize(), assets);
+            controller.stopGame(winnerPlayer);
+            controller.updateGameStats(player1, player2);
 
             return;
         }
@@ -76,7 +73,7 @@ public class Game {
         }
 
         switchPlayer();
-        controller.drawBoard(this, width, height, cellSize, assets);
+        controller.drawBoard(this, board.getWidth(), board.getHeight(), board.getCellSize(), assets);
 
         // We'll later implement the settings but let's say the user wants to play
         // against the computer
@@ -97,28 +94,23 @@ public class Game {
     }
 
     public Game(int width, int height, int cellSize, Controller controller, HashMap<String, Image> assets) {
-        this.board = new Board(width, height);
-        this.width = width;
-        this.height = height;
-        this.cellSize = cellSize;
+        this.board = new Board(width, height, cellSize);
         this.controller = controller;
         this.assets = assets;
         this.round = 1;
         this.moves = 0;
-        this.gameOver = false;
         this.player1 = new Player("Player 1", new Snake("red"));
         this.player2 = new Player("Player 2", new Snake("blue"));
         this.currentPlayer = player1;
 
         controller.setCurrentPlayer(player1);
+        controller.updateGameStats(player1, player2);
     }
 
     public void initialize() {
         board.clear();
         round = 1;
         moves = 0;
-        gameOver = false;
-        winner = 0;
         currentPlayer = player1;
         initializeSnakes();
         randomlyAddCells(NUM_INITIAL_OBSTACLES, true);
@@ -126,7 +118,7 @@ public class Game {
 
         controller.showRound(round);
         controller.setCurrentPlayer(currentPlayer);
-        controller.drawBoard(this, width, height, cellSize, assets);
+        controller.drawBoard(this, board.getWidth(), board.getHeight(), board.getCellSize(), assets);
     }
 
     private void initializeSnakes() {
@@ -139,20 +131,20 @@ public class Game {
 
         Snake snake2 = player2.getSnake();
         snake2.getBody().clear();
-        snake2.addSegment(new Point(width - 4, height - 2));
-        snake2.addSegment(new Point(width - 3, height - 2));
-        snake2.addSegment(new Point(width - 2, height - 2));
+        snake2.addSegment(new Point(board.getWidth() - 4, board.getHeight() - 2));
+        snake2.addSegment(new Point(board.getWidth() - 3, board.getHeight() - 2));
+        snake2.addSegment(new Point(board.getWidth() - 2, board.getHeight() - 2));
         board.addSnake(snake2);
     }
 
     private void randomlyAddCells(int num, boolean isObstacle) {
         for (int i = 0; i < num; i++) {
-            int x = (int) (Math.random() * width);
-            int y = (int) (Math.random() * height);
+            int x = (int) (Math.random() * board.getWidth());
+            int y = (int) (Math.random() * board.getHeight());
 
             while (board.isCellOccupied(x, y)) {
-                x = (int) (Math.random() * width);
-                y = (int) (Math.random() * height);
+                x = (int) (Math.random() * board.getWidth());
+                y = (int) (Math.random() * board.getHeight());
             }
 
             if (isObstacle) {
@@ -161,14 +153,6 @@ public class Game {
                 board.addFood(new Point(x, y));
             }
         }
-    }
-
-    public boolean isGameOver() {
-        return gameOver;
-    }
-
-    public int getWinner() {
-        return winner;
     }
 
     public Board getBoard() {

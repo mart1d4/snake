@@ -40,7 +40,19 @@ public class Controller {
     private Button startButton;
 
     @FXML
+    private Button stopButton;
+
+    @FXML
     private Button playAgainButton;
+
+    @FXML
+    private Label gameAmount;
+
+    @FXML
+    private Label playerWin1;
+
+    @FXML
+    private Label playerWin2;
 
     private Player currentPlayer;
 
@@ -55,6 +67,10 @@ public class Controller {
         playAgainButton.setOnAction((event) -> {
             startGame();
         });
+
+        stopButton.setOnAction((event) -> {
+            App.closeApp();
+        });
     }
 
     public void startGame() {
@@ -62,6 +78,7 @@ public class Controller {
         showGameOver("");
         hidePlayAgain();
         showGame();
+        gameContainer.requestFocus();
         App.startGame();
     }
 
@@ -174,5 +191,11 @@ public class Controller {
 
     public void hidePlayAgain() {
         playAgainButton.setVisible(false);
+    }
+
+    public void updateGameStats(Player player1, Player player2) {
+        gameAmount.setText("Games played: " + (player1.getWins() + player2.getWins()));
+        playerWin1.setText(player1.getName() + " wins: " + player1.getWins());
+        playerWin2.setText(player2.getName() + " wins: " + player2.getWins());
     }
 }

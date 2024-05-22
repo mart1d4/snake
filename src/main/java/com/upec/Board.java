@@ -6,14 +6,16 @@ import java.util.List;
 public class Board {
     private int width;
     private int height;
+    private int cellSize;
     private int[][] cells;
     private List<Snake> snakes;
     private List<Point> obstacles;
     private List<Point> foods;
 
-    public Board(int width, int height) {
+    public Board(int width, int height, int cellSize) {
         this.width = width;
         this.height = height;
+        this.cellSize = cellSize;
         this.cells = new int[height][width];
         this.snakes = new ArrayList<>();
         this.obstacles = new ArrayList<>();
@@ -26,6 +28,10 @@ public class Board {
 
     public int getHeight() {
         return height;
+    }
+
+    public int getCellSize() {
+        return cellSize;
     }
 
     public void clear() {
@@ -115,17 +121,22 @@ public class Board {
         return mergedBoard;
     }
 
+    private boolean isPointOutOfBounds(Point p) {
+        return p.x < 0 || p.x >= height || p.y < 0 || p.y >= width;
+    }
+
     // Check if a cell is occupied by anything
     public boolean isCellOccupied(int x, int y) {
-        if (x < 0 || x >= height || y < 0 || y >= width) { // Don't go out of bounds
+        if (this.isPointOutOfBounds(new Point(x, y))) { // Don't go out of bounds
             return true;
         }
 
         return getBoard()[x][y] != 0;
     }
 
+    // Check if a cell is blocked (obstacle, snake, wall)
     public boolean isCellBlocked(int x, int y) {
-        if (x < 0 || x >= height || y < 0 || y >= width) { // Don't go out of bounds
+        if (this.isPointOutOfBounds(new Point(x, y))) { // Don't go out of bounds
             return true;
         }
 

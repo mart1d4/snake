@@ -2,12 +2,12 @@ package com.upec;
 
 public class Player {
     private String name;
-    private int score;
+    private int wins;
     private Snake snake;
 
     public Player(String name, Snake snake) {
         this.name = name;
-        this.score = 0;
+        this.wins = 0;
         this.snake = snake;
     }
 
@@ -39,11 +39,11 @@ public class Player {
         return snake;
     }
 
-    public int getScore() {
-        return score;
+    public int getWins() {
+        return wins;
     }
 
-    public void addVictory() {
-        score++;
+    public void addWin() {
+        wins++;
     }
 }

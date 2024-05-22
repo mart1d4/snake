@@ -5,6 +5,5 @@ module-info.class
 com\upec\Controller.class
 com\upec\Game.class
 com\upec\Player.class
-com\upec\Display.class
 com\upec\Point.class
 com\upec\App$1.class
