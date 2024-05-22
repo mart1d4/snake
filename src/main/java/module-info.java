@@ -6,5 +6,4 @@ module com.upec {
     opens com.upec to javafx.fxml;
 
     exports com.upec;
-    exports com.upec.tests;
 }
