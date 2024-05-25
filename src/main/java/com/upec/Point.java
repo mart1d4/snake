@@ -1,7 +1,5 @@
 package com.upec;
 
-import java.util.Objects;
-
 public class Point {
     public int x;
     public int y;
@@ -12,35 +10,16 @@ public class Point {
     }
 
     @Override
-    public String toString() {
-        return "(" + x + ", " + y + ")";
-    }
-
-    @Override
     public boolean equals(Object obj) {
-        if (this == obj)
+        if (this == obj) {
             return true;
-        if (obj == null || getClass() != obj.getClass())
+        }
+
+        if (obj == null || getClass() != obj.getClass()) {
             return false;
+        }
+
         Point point = (Point) obj;
         return x == point.x && y == point.y;
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(x, y);
-    }
-
-    public int getX() {
-        return x;
-    }
-
-    public int getY() {
-        return y;
-    }
-
-    public void translate(int dx, int dy) {
-        x += dx;
-        y += dy;
     }
 }

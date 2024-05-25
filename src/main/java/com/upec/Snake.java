@@ -1,13 +1,14 @@
 package com.upec;
 
-import java.util.ArrayList;
 import java.util.LinkedList;
-import java.util.List;
+import java.util.ArrayList;
 import java.util.Queue;
+import java.util.List;
 
 public class Snake {
     private List<Point> body;
     private String color;
+    private String[] directions = new String[] { "up", "down", "left", "right" };
 
     public Snake(String color) {
         this.body = new ArrayList<>();
@@ -18,14 +19,25 @@ public class Snake {
         return body;
     }
 
+    public Point getHead() {
+        return body.get(0);
+    }
+
     public String getColor() {
         return color;
     }
 
-    public void addSegment(Point segment) {
+    public void addBody(List<Point> body) {
+        this.body.addAll(body);
+    }
+
+    public void addTail(Point segment) {
         body.add(segment);
     }
 
+    // Used to determine the direction of the snake
+    // to correctly draw its head in the UI
+    // or to play the game with the AI
     public String getDirection() {
         Point head = body.get(0);
         Point next = body.get(1);
@@ -37,6 +49,8 @@ public class Snake {
         }
     }
 
+    // Used to determine the direction of the tail
+    // to correctly draw the tail in the UI
     public String getTailDirection() {
         Point tail = body.get(body.size() - 1);
         Point beforeTail = body.get(body.size() - 2);
@@ -48,7 +62,13 @@ public class Snake {
         }
     }
 
+    // Used to determine the direction of the body segment
+    // to correctly draw the body in the UI
     public String getBodyDirection(int i) {
+        if (i < 1 || i >= body.size() - 1) { // Prevent out of bounds
+            return getDirection();
+        }
+
         Point current = body.get(i);
         Point next = body.get(i + 1);
         Point previous = body.get(i - 1);
@@ -84,6 +104,7 @@ public class Snake {
     }
 
     // Move the snake by adding a new head and removing the tail
+    // unless the snake is growing in which case the tail is not removed
     public void move(int dx, int dy, boolean grow) {
         Point head = body.get(0);
         Point newHead = new Point(head.x + dx, head.y + dy);
@@ -94,15 +115,14 @@ public class Snake {
         }
     }
 
+    // Remove the last segment of the snake
     public void shrink() {
         body.remove(body.size() - 1);
     }
 
     public boolean checkCollisionWithItself() {
-        Point head = body.get(0);
-
         for (int i = 1; i < body.size(); i++) {
-            if (head.equals(body.get(i))) {
+            if (body.get(0).equals(body.get(i))) {
                 return true;
             }
         }
@@ -110,9 +130,13 @@ public class Snake {
         return false;
     }
 
-    public boolean checkCollisionWithOtherSnake(Snake otherSnake) {
-        for (Point segment : otherSnake.getBody()) {
-            if (body.get(0).equals(segment)) {
+    // Used to check if the snake collided with
+    // - the other snake
+    // - an obstacle
+    // - a food
+    public boolean checkCollision(List<Point> list) {
+        for (Point point : list) {
+            if (body.get(0).equals(point)) {
                 return true;
             }
         }
@@ -120,28 +144,8 @@ public class Snake {
         return false;
     }
 
-    public boolean checkCollisionWithObstacle(List<Point> obstacles) {
-        for (Point obstacle : obstacles) {
-            if (body.get(0).equals(obstacle)) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    public boolean checkCollisionWithFood(List<Point> foods) {
-        for (Point food : foods) {
-            if (body.get(0).equals(food)) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    // This method is called after checkCollisionWithFood
-    // returns true to get the food that the snake collided with
+    // This method is called after checkCollion returns true for foods,
+    // to get the food that the snake collided with
     // and remove it from the list of foods
     public Point getFoodCollided(List<Point> foods) {
         for (Point food : foods) {
@@ -158,34 +162,29 @@ public class Snake {
         return head.x < 0 || head.x >= height || head.y < 0 || head.y >= width;
     }
 
+    // Snake is dead if it collides with itself, the other snake, an obstacle or a
+    // wall
     public boolean isSnakeDead(Board board, Snake otherSnake) {
-        List<Point> obstacles = board.getObstacles();
-        int width = board.getWidth();
-        int height = board.getHeight();
-
-        return checkCollisionWithItself() || checkCollisionWithOtherSnake(otherSnake)
-                || checkCollisionWithObstacle(obstacles)
-                || checkCollisionWithWall(width, height);
+        return (checkCollisionWithItself()
+                || checkCollision(otherSnake.getBody())
+                || checkCollision(board.getObstacles())
+                || checkCollisionWithWall(board.getWidth(), board.getHeight()));
     }
 
-    public Point getHead() {
-        return body.get(0);
-    }
-
-    public String playAdvancedMoveAI(Board board, Snake otherSnake) {
-        String[] directions = new String[] { "up", "down", "left", "right" };
+    public String playMoveAI(Board board, Snake otherSnake, boolean eatFood) {
         Point food = findNearestFood(board);
         Point opponentHead = otherSnake.getHead();
 
         // Move towards the nearest food if available
-        if (food != null) {
+        // and if it is enabled
+        if (food != null && eatFood) {
             String moveToFood = moveToTarget(board, food, otherSnake);
             if (moveToFood != null) {
                 return moveToFood;
             }
         }
 
-        // Chase the opponent if no food is found
+        // Chase the opponent if no food is found or if it is disabled
         String moveToOpponent = moveToTarget(board, opponentHead, otherSnake);
         if (moveToOpponent != null) {
             return moveToOpponent;
@@ -214,7 +213,6 @@ public class Snake {
 
     // Move towards a target point
     private String moveToTarget(Board board, Point target, Snake otherSnake) {
-        String[] directions = new String[] { "up", "down", "left", "right" };
         Point head = this.getHead();
         int minDistance = Integer.MAX_VALUE;
         String bestDirection = null;
@@ -241,7 +239,7 @@ public class Snake {
 
     // Check if moving in a direction is safe by evaluating multiple steps ahead
     private boolean isPathSafe(Board board, Snake clone, Snake otherSnake, Point direction) {
-        int maxSteps = 5; // Initial number of lookahead steps
+        int maxSteps = 3; // Initial number of lookahead steps
         while (maxSteps > 0) {
             if (isPathClear(board, clone, otherSnake, direction, maxSteps)) {
                 return true; // Safe path found
@@ -252,6 +250,7 @@ public class Snake {
     }
 
     // Use BFS to check if a path is clear for a given number of steps
+    // (https://fr.wikipedia.org/wiki/Algorithme_de_parcours_en_largeur)
     private boolean isPathClear(Board board, Snake clone, Snake otherSnake, Point direction, int steps) {
         Queue<Snake> queue = new LinkedList<>();
         queue.add(clone);
@@ -262,7 +261,7 @@ public class Snake {
                 Snake current = queue.poll();
                 Point head = current.getHead();
 
-                for (String d : new String[] { "up", "down", "left", "right" }) {
+                for (String d : directions) {
                     Point dir = Player.getPointFromDirection(d);
                     Snake nextMove = current.cloneSnake();
                     nextMove.move(dir.x, dir.y, false);
@@ -292,25 +291,23 @@ public class Snake {
 
     public Snake cloneSnake() {
         Snake clone = new Snake(color);
-        for (Point segment : body) {
-            clone.addSegment(segment);
-        }
+        clone.addBody(new ArrayList<>(body));
         return clone;
     }
 
     private Point findNearestFood(Board board) {
-        List<Point> foods = board.getFoods();
         Point head = this.getHead();
         Point nearestFood = null;
         int minDistance = Integer.MAX_VALUE;
 
-        for (Point food : foods) {
+        for (Point food : board.getFoods()) {
             int distance = Math.abs(food.x - head.x) + Math.abs(food.y - head.y);
             if (distance < minDistance) {
                 minDistance = distance;
                 nearestFood = food;
             }
         }
+
         return nearestFood;
     }
 }

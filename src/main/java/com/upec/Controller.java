@@ -17,49 +17,36 @@ public class Controller {
 
     @FXML
     private BorderPane gameContainer;
-
     @FXML
     private BorderPane startContainer;
-
     @FXML
     private Canvas canvas;
-
     @FXML
     private HBox header;
-
     @FXML
     private Label roundLabel;
-
     @FXML
     private Label playerLabel;
-
     @FXML
     private Label winLabel;
-
     @FXML
     private Button startButton;
-
     @FXML
     private Button stopButton;
-
     @FXML
     private Button playAgainButton;
-
     @FXML
     private Label gameAmount;
-
     @FXML
     private Label playerWin1;
-
     @FXML
     private Label playerWin2;
 
     private Player currentPlayer;
 
+    // This runs when the elements are mounted
+    // and sets up the event listeners
     public void initialize() {
-        showRound(1);
-        updatePlayerLabel();
-
         startButton.setOnAction((event) -> {
             startGame();
         });
@@ -76,27 +63,31 @@ public class Controller {
     public void startGame() {
         // Just to hide the win message
         showGameOver("");
+        // We don't want to show the play again button
+        // when the game is running
         hidePlayAgain();
         showGame();
         gameContainer.requestFocus();
         App.startGame();
     }
 
+    // Shows the winner and displays the play again button
     public void stopGame(Player winner) {
         showGameOver("Game Over! " + winner.getName() + " wins!");
         showPlayAgain();
     }
 
-    public void drawBoard(Game game, int width, int height, int cellSize, HashMap<String, Image> assets) {
+    public void drawBoard(Game game, HashMap<String, Image> assets) {
         GraphicsContext gc = canvas.getGraphicsContext2D();
         Board board = game.getBoard();
+        int width = board.getWidth();
+        int height = board.getHeight();
+        int cellSize = board.getCellSize();
 
         gc.clearRect(0, 0, width, height);
 
         for (int x = 0; x < width; x++) {
             for (int y = 0; y < height; y++) {
-                // Before filling anything, fill the background
-                // needs to be a grid with 2 different green colors
                 if (x % 2 == 0) {
                     if (y % 2 == 0) {
                         gc.setFill(Color.web("#aad751"));
@@ -113,12 +104,10 @@ public class Controller {
 
                 gc.fillRect(y * cellSize, x * cellSize, cellSize, cellSize);
 
-                if (board.isCellOccupied(x, y)) {
-                    if (board.isFood(x, y)) {
-                        gc.drawImage(assets.get("apple"), y * cellSize, x * cellSize, cellSize, cellSize);
-                    } else if (board.isObstacle(x, y)) {
-                        gc.drawImage(assets.get("obstacle"), y * cellSize, x * cellSize, cellSize, cellSize);
-                    }
+                if (board.isFood(x, y)) {
+                    gc.drawImage(assets.get("apple"), y * cellSize, x * cellSize, cellSize, cellSize);
+                } else if (board.isObstacle(x, y)) {
+                    gc.drawImage(assets.get("obstacle"), y * cellSize, x * cellSize, cellSize, cellSize);
                 }
             }
 
@@ -138,6 +127,7 @@ public class Controller {
         for (int i = 0; i < body.size(); i++) {
             Point segment = body.get(i);
             Image imageToDraw;
+
             if (i == 0) { // Head
                 imageToDraw = assets.get("head_" + snake.getDirection() + end);
             } else if (i == body.size() - 1) { // Tail
@@ -160,11 +150,7 @@ public class Controller {
     }
 
     private void updatePlayerLabel() {
-        if (currentPlayer != null) {
-            playerLabel.setText("Current Player: " + currentPlayer.getName());
-        } else {
-            playerLabel.setText("Current Player: ");
-        }
+        playerLabel.setText("Current Player: " + currentPlayer.getName());
     }
 
     public void showGameOver(String message) {
@@ -178,11 +164,6 @@ public class Controller {
     public void showGame() {
         gameContainer.setVisible(true);
         startContainer.setVisible(false);
-    }
-
-    public void showStart() {
-        gameContainer.setVisible(false);
-        startContainer.setVisible(true);
     }
 
     public void showPlayAgain() {

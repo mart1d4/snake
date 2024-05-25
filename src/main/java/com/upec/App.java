@@ -37,7 +37,7 @@ public class App extends Application {
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/layout.fxml"));
         Parent root = loader.load();
         Controller controller = loader.getController();
-        Scene scene = new Scene(root, 1500, 900);
+        Scene scene = new Scene(root, 1500, 850);
 
         HashMap<String, Image> assets = getAssets();
 
@@ -50,11 +50,15 @@ public class App extends Application {
         scene.setOnKeyPressed(this::handleKeyPress);
     }
 
+    // This is run when player clicks on the start button
+    // or restarts the game
     public static void startGame() {
         game.initialize();
         isPlaying = true;
     }
 
+    // This is run when a game is over
+    // to prevent click events from being handled
     public static void stopGame() {
         isPlaying = false;
     }
@@ -63,6 +67,7 @@ public class App extends Application {
         System.exit(0);
     }
 
+    // Load all the assets
     private HashMap<String, Image> getAssets() {
         List<String> assetNames = List.of(
                 "apple",
@@ -106,6 +111,8 @@ public class App extends Application {
         return assets;
     }
 
+    // Handle key press events
+    // Consumes the event to prevent it from triggering unwanted actions
     private void handleKeyPress(KeyEvent event) {
         event.consume();
 
@@ -146,6 +153,8 @@ public class App extends Application {
         }
     }
 
+    // This is the main entry point of the application
+    // Once it's running, it waits for the player to start the game
     public static void main(String[] args) {
         launch(args);
     }
