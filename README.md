@@ -2,11 +2,6 @@
 
 **UPEC - L1 INFO**
 
-Groupe 22:
-
--   CHLYAH Ilyasse
--   DANTON Martin
-
 ## Structure du projet
 
 Le projet est divisé en plusieurs fichiers:
